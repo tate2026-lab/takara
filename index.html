@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秘宝の謎</title>
+<style>
+body {
+font-family: sans-serif;
+text-align: center;
+background-color: #1a1a1a;
+color: #ffffff;
+margin: 0;
+padding: 20px;
+}
+.container {
+max-width: 500px;
+margin: 0 auto;
+}
+input[type="text"] {
+font-size: 18px;
+padding: 10px;
+width: 60%;
+text-align: center;
+border-radius: 5px;
+border: 1px solid #ccc;
+}
+button {
+font-size: 18px;
+padding: 10px 20px;
+border-radius: 5px;
+border: none;
+background-color: #d4af37;
+color: #000;
+font-weight: bold;
+cursor: pointer;
+}
+.image-wrapper {
+position: relative;
+display: inline-block;
+margin-top: 20px;
+max-width: 100%;
+}
+img {
+max-width: 100%;
+height: auto;
+border-radius: 8px;
+}
+/* タップ判定判定エリア（透明なボタン） /
+#tap-target {
+position: absolute;
+/ ↓ タップさせる位置の設定（％で指定） /
+top: 40%;     / 上からの位置 /
+left: 30%;    / 左からの位置 /
+width: 40%;   / 横幅 /
+height: 30%;  / 縦幅 /
+background: rgba(255, 0, 0, 0); / 完全に透明 */
+cursor: pointer;
+}
+.hidden {
+display: none;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>4文字の漢字を入力せよ</h2>
+<!-- パスワード入力部分 -->
+<div id="pass-section">
+<input type="text" id="pass-input" placeholder="漢字4文字">
+<button onclick="checkPassword()">解除</button>
+<p id="error-msg" style="color: #ff6b6b;"></p>
+</div>
+<!-- 画像表示エリア -->
+<div id="image-section" class="image-wrapper">
+<!-- 初期表示・ステージ1画像 -->
+<img id="main-img" src="ooo1.jpeg" alt="ヒント画像">
+<!-- 隠しタップエリア -->
+<div id="tap-target" class="hidden" onclick="countTap()"></div>
+</div>
+</div>
+<script>
+// --------------------------------------------------
+// 設定項目（ここを自由に書き換えてください）
+// --------------------------------------------------
+const CORRECT_PASS = "九蓮宝燈"; // ← 正解の漢字4文字
+const REQUIRED_TAPS = 9;       // ← 必要なタップ回数
+// --------------------------------------------------
+let currentTaps = 0;
+function checkPassword() {
+const input = document.getElementById("pass-input").value;
+const errorMsg = document.getElementById("error-msg");
+const mainImg = document.getElementById("main-img");
+const tapTarget = document.getElementById("tap-target");
+const passSection = document.getElementById("pass-section");
+if (input === CORRECT_PASS) {
+// パスワード正解時
+mainImg.src = "ooo2.jpeg"; // 画像を切り替え
+passSection.classList.add("hidden"); // 入力欄を隠す
+tapTarget.classList.remove("hidden"); // タップエリアを有効化
+errorMsg.innerText = "";
+} else {
+errorMsg.innerText = "パスワードが違います";
+}
+}
+function countTap() {
+currentTaps++;
+if (currentTaps >= REQUIRED_TAPS) {
+// 必要回数タップされたらお宝画像を表示
+document.getElementById("main-img").src = "ooo3.jpeg";
+document.getElementById("tap-target").classList.add("hidden"); // タップエリア無効化
+}
+}
+</script>
+</body>
+</html>
