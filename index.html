@@ -2,103 +2,130 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>秘宝の謎</title>
+<!-- iPhoneで画面が拡大縮小したりズレたりしないための大切な設定です -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>謎解きゲーム</title>
 <style>
-body {
-font-family: sans-serif;
-text-align: center;
-background-color: #1a1a1a;
-color: #ffffff;
-margin: 0;
-padding: 20px;
+* {
+box-sizing: border-box;
+-webkit-tap-highlight-color: transparent; /* タップ時の青い枠を消す /
 }
-.container {
-max-width: 500px;
+body {
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+text-align: center;
+background-color: #000;
+color: #fff;
+margin: 0;
+padding: 0;
+overflow-x: hidden;
+}
+.screen {
+position: relative;
+width: 100%;
+max-width: 430px; / iPhoneの画面幅に合わせた最大値 /
 margin: 0 auto;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+justify-content: center;
+}
+img {
+width: 100%;
+height: auto;
+display: block;
+}
+/ 1枚目の画像の上部に重ねる入力欄のコンテナ /
+.input-overlay {
+position: absolute;
+top: 13%; / 1枚目の上部の空白スペースに合わせる位置 /
+left: 50%;
+transform: translateX(-50%);
+width: 75%;
+background: rgba(0, 0, 0, 0.4);
+padding: 8px;
+border-radius: 12px;
+backdrop-filter: blur(4px); / 背景を少しすりガラス風にして読みやすくする /
 }
 input[type="text"] {
-font-size: 18px;
+font-size: 16px; / iPhoneで文字入力時に画面が勝手にズームするのを防ぐサイズ /
 padding: 10px;
-width: 60%;
+width: 55%;
 text-align: center;
-border-radius: 5px;
+border-radius: 6px;
 border: 1px solid #ccc;
+outline: none;
+background: #fff;
+color: #000;
 }
 button {
-font-size: 18px;
-padding: 10px 20px;
-border-radius: 5px;
+font-size: 16px;
+padding: 10px 14px;
+border-radius: 6px;
 border: none;
 background-color: #d4af37;
 color: #000;
 font-weight: bold;
 cursor: pointer;
+margin-left: 4px;
+vertical-align: middle;
 }
-.image-wrapper {
-position: relative;
-display: inline-block;
-margin-top: 20px;
-max-width: 100%;
-}
-img {
-max-width: 100%;
-height: auto;
-border-radius: 8px;
-}
-/* タップ判定判定エリア（透明なボタン） /
-#tap-target {
+/ 2枚目の人魚の場所（右下あたり）に配置する透明なタップ判定エリア /
+#mermaid-target {
 position: absolute;
-/ ↓ タップさせる位置の設定（％で指定） /
-top: 40%;     / 上からの位置 /
-left: 30%;    / 左からの位置 /
-width: 40%;   / 横幅 /
-height: 30%;  / 縦幅 /
-background: rgba(255, 0, 0, 0); / 完全に透明 */
+top: 50%;   / 人魚の縦位置 /
+left: 68%;  / 人魚の横位置 /
+width: 25%; / タップ判定の横幅 /
+height: 14%;/ タップ判定の縦幅 /
 cursor: pointer;
+/ デバッグ用：位置を確認したいときは下のコメントアウトを外してください /
+/ background: rgba(255, 0, 0, 0.4); */
 }
 .hidden {
-display: none;
+display: none !important;
+}
+#error-msg {
+color: #ff6b6b;
+font-size: 13px;
+margin: 4px 0 0 0;
+font-weight: bold;
 }
 </style>
 </head>
 <body>
-<div class="container">
-<h2>4文字の漢字を入力せよ</h2>
-<!-- パスワード入力部分 -->
-<div id="pass-section">
-<input type="text" id="pass-input" placeholder="漢字4文字">
+<!-- ステップ1：1枚目の画面 -->
+<div id="stage1-screen" class="screen">
+<img src="ooo1.jpeg" alt="ステージ1">
+<div class="input-overlay">
+<input type="text" id="pass-input" placeholder="漢字4文字" inputmode="text">
 <button onclick="checkPassword()">解除</button>
-<p id="error-msg" style="color: #ff6b6b;"></p>
+<p id="error-msg"></p>
 </div>
-<!-- 画像表示エリア -->
-<div id="image-section" class="image-wrapper">
-<!-- 初期表示・ステージ1画像 -->
-<img id="main-img" src="ooo1.jpeg" alt="ヒント画像">
-<!-- 隠しタップエリア -->
-<div id="tap-target" class="hidden" onclick="countTap()"></div>
 </div>
+<!-- ステップ2：2枚目の画面（最初は隠す） -->
+<div id="stage2-screen" class="screen hidden">
+<img src="ooo2.jpeg" alt="ステージ2">
+<!-- 人魚の場所の透明タップエリア -->
+<div id="mermaid-target" onclick="countTap()"></div>
+</div>
+<!-- ステップ3：3枚目の画面（最初は隠す・全画面表示） -->
+<div id="stage3-screen" class="screen hidden">
+<img src="ooo3.jpeg" alt="お宝画像" style="width: 100vw; height: 100vh; object-fit: cover; position: fixed; top: 0; left: 0; z-index: 999;">
 </div>
 <script>
 // --------------------------------------------------
-// 設定項目（ここを自由に書き換えてください）
+// 設定項目
 // --------------------------------------------------
-const CORRECT_PASS = "九蓮宝燈"; // ← 正解の漢字4文字
-const REQUIRED_TAPS = 9;       // ← 必要なタップ回数
+const CORRECT_PASS = "開前祝宝"; // ← 正解の漢字4文字（必要に応じて変更してください）
+const REQUIRED_TAPS = 5;       // ← 人魚をタップする回数
 // --------------------------------------------------
 let currentTaps = 0;
 function checkPassword() {
-const input = document.getElementById("pass-input").value;
+const input = document.getElementById("pass-input").value.trim();
 const errorMsg = document.getElementById("error-msg");
-const mainImg = document.getElementById("main-img");
-const tapTarget = document.getElementById("tap-target");
-const passSection = document.getElementById("pass-section");
 if (input === CORRECT_PASS) {
-// パスワード正解時
-mainImg.src = "ooo2.jpeg"; // 画像を切り替え
-passSection.classList.add("hidden"); // 入力欄を隠す
-tapTarget.classList.remove("hidden"); // タップエリアを有効化
-errorMsg.innerText = "";
+// 1枚目を完全に隠して、2枚目の画面を表示する
+document.getElementById("stage1-screen").classList.add("hidden");
+document.getElementById("stage2-screen").classList.remove("hidden");
 } else {
 errorMsg.innerText = "パスワードが違います";
 }
@@ -106,9 +133,9 @@ errorMsg.innerText = "パスワードが違います";
 function countTap() {
 currentTaps++;
 if (currentTaps >= REQUIRED_TAPS) {
-// 必要回数タップされたらお宝画像を表示
-document.getElementById("main-img").src = "ooo3.jpeg";
-document.getElementById("tap-target").classList.add("hidden"); // タップエリア無効化
+// 指定回数タップされたら3枚目の全画面画像を表示
+document.getElementById("stage2-screen").classList.add("hidden");
+document.getElementById("stage3-screen").classList.remove("hidden");
 }
 }
 </script>
